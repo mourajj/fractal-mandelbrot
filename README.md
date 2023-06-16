@@ -15,7 +15,7 @@ Projeto que gera um fractal de mandelbrot em Java com a interface Runnable para 
 
 ## Testes
 
-| Quantidade de pixels | Quantidade de threads    | Tempo de execucao                |
+| Quantidade de Interacoes | Quantidade de threads    | Tempo de execucao                |
 | :-------- | :------- | :------------------------- |
 | `15000` | 1 | 14259ms |
 | `15000` | 2 | 7885ms |
