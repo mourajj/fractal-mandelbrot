@@ -1,19 +1,18 @@
 package pad.mandelbrot;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import javax.swing.JFrame;
 
-
 public class Mandelbrot extends JFrame implements Runnable {
-    private static final int MAX_ITER = 15000;
+    private static final int INTERACTIONS = 10000;
     private static final double ZOOM = 300;
     private static final int WIDTH = 800;
     private static final int HEIGHT = 800;
+    private static final int numThreads = 8;
     private BufferedImage image;
-    private int[] colors = new int[MAX_ITER];
-    private int currentRow = 0;
+    private int currentBlock = 0;
+    private final Object lock = new Object();
 
     public Mandelbrot() {
         super("Fractal de Mandelbrot");
@@ -22,12 +21,7 @@ public class Mandelbrot extends JFrame implements Runnable {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
 
-        for (int i = 0; i < MAX_ITER; i++) {
-            colors[i] = Color.HSBtoRGB(i / 256f, 1, i / (i + 8f));
-        }
 
-        int numThreads = 8;
-        // System.out.println(numThreads);
         Thread[] threads = new Thread[numThreads];
 
         for (int i = 0; i < numThreads; i++) {
@@ -49,31 +43,37 @@ public class Mandelbrot extends JFrame implements Runnable {
     }
 
     public void run() {
-        int row;
-        while ((row = getNextRow()) < HEIGHT) {
-            for (int x = 0; x < WIDTH; x++) {
-                double zx = x - 400;
-                double zy = row - 400;
-                zx /= ZOOM;
-                zy /= ZOOM;
-                double cX = zx;
-                double cY = zy;
-                double zxtmp;
-                int iter = MAX_ITER;
-                while (zx * zx + zy * zy < 4 && iter > 0) {
-                    zxtmp = zx * zx - zy * zy + cX;
-                    zy = 2 * zx * zy + cY;
-                    zx = zxtmp;
-                    iter--;
+        int block;
+        while ((block = getNextBlock()) < numThreads) {
+            int blockWidth = WIDTH / numThreads;
+            int startX = block * blockWidth;
+            int endX = startX + blockWidth;
+
+            for (int x = startX; x < endX; x++) {
+                for (int y = 0; y < HEIGHT; y++) {
+                    double zx = x - WIDTH / 2; //Calcula a coordenada zx deslocando o valor de x em relação ao centro horizontal da imagem.
+                    double zy = y - HEIGHT / 2; // Calcula a coordenada zy deslocando o valor de y em relação ao centro vertical da imagem.
+                    zx /= ZOOM;
+                    zy /= ZOOM; // Divide zx e zy pelo zoom pra ajustar a escala do fractal
+                    double cX = zx;
+                    double cY = zy;
+                    double zxtmp;
+                    int iter = INTERACTIONS;
+                    while (zx * zx + zy * zy < 4 && iter > 0) {
+                        zxtmp = zx * zx - zy * zy + cX;
+                        zy = 2 * zx * zy + cY;
+                        zx = zxtmp;
+                        iter--;
+                    }
+                    image.setRGB(x, y, iter | (iter << 8));
                 }
-                image.setRGB(x, row, iter | (iter << 8));
             }
         }
     }
 
-    private int getNextRow() {
-        return currentRow++;
+    private int getNextBlock() {
+        synchronized (lock) {
+            return currentBlock++;
+        }
     }
-
-
 }
