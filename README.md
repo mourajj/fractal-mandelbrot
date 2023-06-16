@@ -7,7 +7,7 @@ Projeto que gera um fractal de mandelbrot em Java com a interface Runnable para 
 
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
-| `PIXELS` | `int` | Quantidade de pixels que será utilizado |
+| `INTERACTIONS` | `int` | Quantidade de interacoes que serao feitas |
 | `ZOOM` | `double` | Coeficiente de zoom  |
 | `WIDTH` | `int` | Largura da tela |
 | `HEIGHT` | `int` | Altura da tela |
